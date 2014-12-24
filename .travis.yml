@@ -4,9 +4,6 @@ otp_release:
   - R16B03-1
   - R15B03
 script: make travis
-branches:
-  only:
-    - master
 before_deploy: "rm -rf !(rebar3)"
 deploy:
   on:
