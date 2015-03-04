@@ -43,10 +43,10 @@ do(State) ->
     InDirs = in_dirs(State, RawOpts),
     ok = compile_tests(State, TestApps, InDirs),
     ok = maybe_cover_compile(State, RawOpts),
-    CTOpts = resolve_ct_opts(State, Opts),
+    CTOpts = resolve_ct_opts(State, TestApps, Opts),
     Verbose = proplists:get_value(verbose, RawOpts, false),
-    TestDirs = test_dirs(State, TestApps),
-    Result = run_test([{dir, TestDirs}|CTOpts], Verbose),
+    ?DEBUG("ct options: ~p~n", [CTOpts]),
+    Result = run_test(CTOpts, Verbose),
     ok = rebar_prv_cover:maybe_write_coverdata(State, ?PROVIDER),
     case Result of
         {error, Reason} ->
@@ -288,9 +288,15 @@ test_dirs(State, TestApps) ->
     %%  due to be added
     F = fun(App) -> rebar_app_info:dir(App) =/= rebar_dir:get_cwd() end,
     BareEbin = filename:join([rebar_dir:base_dir(State), "ebin"]),
-    case lists:any(F, TestApps) andalso filelib:is_dir(BareEbin) of
+    Dirs = case lists:any(F, TestApps) andalso filelib:is_dir(BareEbin) of
         false -> application_dirs(TestApps, []);
         true  -> [BareEbin|application_dirs(TestApps, [])]
+    end,
+    %% ct is picky about {dirs, ...}. if there's multiple dirs a list is fine
+    %%  but if there's only one dir it can't be wrapped in a list
+    case Dirs of
+        [Dir] -> Dir;
+        Else  -> Else
     end.
 
 application_dirs([], Acc) -> lists:reverse(Acc);
@@ -308,13 +314,14 @@ first_files(State) ->
     CTFirst = rebar_state:get(State, ct_first_files, []),
     {erl_first_files, CTFirst}.
 
-resolve_ct_opts(State, CmdLineOpts) ->
+resolve_ct_opts(State, TestApps, CmdLineOpts) ->
     CTOpts = rebar_state:get(State, ct_opts, []),
     Opts = lists:ukeymerge(1,
                     lists:ukeysort(1, CmdLineOpts),
                     lists:ukeysort(1, CTOpts)),
     %% disable `auto_compile` and remove `dir` from the opts
-    [{auto_compile, false}|lists:keydelete(dir, 1, Opts)].
+    TestDirs = test_dirs(State, TestApps),
+    [{auto_compile, false}, {dir, TestDirs}] ++ lists:keydelete(dir, 1, Opts).
 
 compile_tests(State, TestApps, InDirs) ->
     F = fun(AppInfo) ->
