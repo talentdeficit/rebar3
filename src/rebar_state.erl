@@ -4,7 +4,7 @@
          get/2, get/3, set/3,
 
          opts/1, opts/2,
-         default/1, default/2,
+         default/1, default/2, default/3,
 
          escript_path/1, escript_path/2,
 
@@ -125,6 +125,9 @@ default(#state_t{default=Opts}) ->
 default(State, Opts) ->
     State#state_t{default=Opts}.
 
+default(State=#state_t{default=Opts}, Key, Value) ->
+    State#state_t{ default = dict:store(Key, Value, Opts) }.
+
 opts(#state_t{opts=Opts}) ->
     Opts.
 
@@ -190,11 +193,16 @@ apply_overrides(State=#state_t{overrides=Overrides}, AppName) ->
                 end, State2, Overrides).
 
 add_to_profile(State, Profile, KVs) when is_atom(Profile), is_list(KVs) ->
-    Profiles = rebar_state:get(State, profiles, []),
+    Profiles = case dict:find(profiles, State#state_t.default) of
+        {ok, Value} ->
+            Value;
+        error ->
+            []
+    end,
     ProfileOpts = dict:from_list(proplists:get_value(Profile, Profiles, [])),
     NewOpts = merge_opts(Profile, dict:from_list(KVs), ProfileOpts),
     NewProfiles = [{Profile, dict:to_list(NewOpts)}|lists:keydelete(Profile, 1, Profiles)],
-    rebar_state:set(State, profiles, NewProfiles).
+    default(State, profiles, NewProfiles).
 
 apply_profiles(State, Profile) when not is_list(Profile) ->
     apply_profiles(State, [Profile]);
