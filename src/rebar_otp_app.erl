@@ -161,8 +161,8 @@ ebin_modules(State, App, Dir) ->
 
 extra_dirs(State) ->
     ErlOpts = rebar_utils:erl_opts(State),
-    Extras = proplists:get_value(extra_src_dirs, ErlOpts, []),
-    SrcDirs = proplists:get_value(src_dirs, ErlOpts, ["src"]),
+    Extras = rebar_utils:extra_dirs(ErlOpts),
+    SrcDirs = rebar_utils:src_dirs(ErlOpts, ["src"]),
     %% remove any dirs that are defined in `src_dirs` from `extra_src_dirs`
     Extras -- SrcDirs.
 

@@ -54,7 +54,10 @@
          wordsize/0,
          tup_umerge/2,
          tup_sort/1,
-         line_count/1]).
+         line_count/1,
+         src_dirs/1, src_dirs/2,
+         extra_dirs/1, extra_dirs/2,
+         all_src_dirs/1, all_src_dirs/2]).
 
 %% for internal use only
 -export([otp_release/0]).
@@ -286,6 +289,32 @@ umerge([], Olds, Merged, _CmpMerged, Cmp) ->
 line_count(PatchLines) ->
     Tokenized = string:tokens(PatchLines, "\n"),
     {ok, length(Tokenized)}.
+
+src_dirs(ErlOpts) -> src_dirs(ErlOpts, []).
+
+src_dirs(ErlOpts, Default) ->
+    Vs = proplists:get_all_values(src_dirs, ErlOpts),
+    case lists:append(Vs) of
+        []   -> Default;
+        Else -> Else
+    end.
+
+extra_dirs(ErlOpts) -> extra_dirs(ErlOpts, []).
+
+extra_dirs(ErlOpts, Default) ->
+    Vs = proplists:get_all_values(extra_src_dirs, ErlOpts),
+    case lists:append(Vs) of
+        []   -> Default;
+        Else -> Else
+    end.
+
+all_src_dirs(ErlOpts) -> all_src_dirs(ErlOpts, []).
+
+all_src_dirs(ErlOpts, Default) ->
+    case src_dirs(ErlOpts) ++ extra_dirs(ErlOpts) of
+        []   -> Default;
+        Else -> Else
+    end.
 
 %% ====================================================================
 %% Internal functions
