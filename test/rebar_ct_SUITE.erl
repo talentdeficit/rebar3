@@ -957,7 +957,8 @@ cover_compiled(Config) ->
     NewState = rebar_state:command_parsed_args(State, GetOptResult),
 
     Tests = rebar_prv_common_test:prepare_tests(NewState),
-    {ok, _} = rebar_prv_common_test:compile(NewState, Tests),
+    {ok, S} = rebar_prv_common_test:compile(NewState, Tests),
+    ok = rebar_prv_common_test:maybe_cover_compile(S),
 
     Name = ?config(name, Config),
     Mod = list_to_atom(Name),

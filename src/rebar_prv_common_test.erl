@@ -9,7 +9,7 @@
          do/1,
          format_error/1]).
 %% exported for test purposes, consider private
--export([compile/2, prepare_tests/1, translate_paths/2]).
+-export([compile/2, prepare_tests/1, translate_paths/2, maybe_cover_compile/1]).
 
 -include("rebar.hrl").
 -include_lib("providers/include/providers.hrl").
@@ -53,6 +53,8 @@ do(State, Tests) ->
     Providers = rebar_state:providers(State),
     Cwd = rebar_dir:get_cwd(),
     rebar_hooks:run_all_hooks(Cwd, pre, ?PROVIDER, Providers, State),
+
+    ok = maybe_cover_compile(State),
 
     case Tests of
         {ok, T} ->
@@ -242,7 +244,6 @@ do_compile(State) ->
     case rebar_prv_compile:do(State) of
         %% successfully compiled apps
         {ok, S} ->
-            ok = maybe_cover_compile(S),
             {ok, S};
         %% this should look like a compiler error, not an eunit error
         Error   -> Error

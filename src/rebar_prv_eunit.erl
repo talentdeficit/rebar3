@@ -56,6 +56,8 @@ do(State, Tests) ->
     Cwd = rebar_dir:get_cwd(),
     rebar_hooks:run_all_hooks(Cwd, pre, ?PROVIDER, Providers, State),
 
+    ok = maybe_cover_compile(State),
+
     case validate_tests(State, Tests) of
         {ok, T} ->
             case run_tests(State, T) of
@@ -110,7 +112,6 @@ compile(State, {ok, Tests}) ->
     case rebar_prv_compile:do(NewState) of
         %% successfully compiled apps
         {ok, S} ->
-            ok = maybe_cover_compile(S),
             {ok, S};
         %% this should look like a compiler error, not an eunit error
         Error   -> Error
