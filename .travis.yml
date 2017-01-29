@@ -10,6 +10,9 @@ otp_release:
 - 17.5
 - R16B03-1
 - R15B03
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install wget    ; fi
 before_script: "./bootstrap"
 script: "./rebar3 ct"
 branches:
