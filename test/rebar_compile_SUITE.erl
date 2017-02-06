@@ -270,9 +270,12 @@ init_per_testcase(Test, Config) when
 init_per_testcase(always_recompile_when_erl_compiler_options_set, Config) ->
     _ = code:ensure_loaded(os),
     UnSetEnv = erlang:function_exported(os, unsetenv, 1),
-    case UnSetEnv of
-        true -> maybe_init_config(Config);
-        _    -> {skip, "os:unsetenv/1 unavailable"}
+    _ = code:ensure_loaded(compile),
+    EnvOpts = erlang:function_exported(compile, env_compiler_options, 0),
+    case {UnSetEnv, EnvOpts} of
+        {true, true}  -> {skip, "compile:env_compiler_options/0 available"};
+        {true, false} -> maybe_init_config(Config);
+        _             -> {skip, "os:unsetenv/1 unavailable"}
     end;
 init_per_testcase(_, Config) -> maybe_init_config(Config).
 
