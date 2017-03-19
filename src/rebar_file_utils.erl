@@ -507,7 +507,8 @@ force_shadow_dir(Target) ->
     %% remove any existing symlink
     ok = case ec_file:is_symlink(Target) of
         true  -> ec_file:remove(Target);
-        false -> ok
+        false -> ok;
+        {error, eperm} -> ok
     end,
     %% if a directory already exists leave it unaltered, otherwise
     %% create it
