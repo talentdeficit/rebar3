@@ -505,7 +505,7 @@ force_link(Source, Target) ->
 
 force_shadow_dir(Target) ->
     %% remove any existing symlink
-    ok = case ec_file:is_symlink(Target) of
+    case ec_file:is_symlink(Target) of
         true  -> ec_file:remove(Target);
         false -> ok;
         {error, eperm} -> ok
