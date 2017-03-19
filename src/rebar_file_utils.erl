@@ -96,7 +96,6 @@ format_error({bad_term_file, AppFile, Reason}) ->
     Error :: {error, string()}.
 symlink_or_create_dir(Source, Target) ->
     SourceExists = ec_file:is_dir(Source) orelse ec_file:is_symlink(Source),
-
     case SourceExists of
         true  -> force_link(Source, Target);
         false -> force_shadow_dir(Target)
@@ -110,7 +109,6 @@ symlink_or_create_dir(Source, Target) ->
     Error :: {error, string()}.
 symlink(Source, Target) ->
     SourceExists = ec_file:is_dir(Source) orelse ec_file:is_symlink(Source),
-
     case SourceExists of
         true  -> force_link(Source, Target);
         false -> ok
@@ -527,11 +525,11 @@ do_symlink(Source, Target) ->
     end.
 
 rm_symlink(Target) ->
+    %% on windows a symlink to a dir can only be deleted via a directory
+    %% delete. since we are mostly likely calling this function in the case
+    %% where the target of the symlink has been removed the only way to
+    %% detect this is via the `eperm` error
     case ec_file:remove(Target) of
-        %% on windows a symlink to a dir can only be deleted via a directory
-        %% delete. since we are mostly likely calling this function in the case
-        %% where the target of the symlink has been removed the only way to
-        %% detect this is via the `eperm` error
         {error, eperm} -> file:del_dir(Target);
         ok             -> ok
     end.
@@ -549,4 +547,3 @@ win32_symlink(Source, Target) ->
                       io_lib:format("Failed to symlink ~s to ~s~n",
                                     [Source, Target]))}
     end.
-    
