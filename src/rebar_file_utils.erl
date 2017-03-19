@@ -506,9 +506,8 @@ force_link(Source, Target) ->
 force_shadow_dir(Target) ->
     %% remove any existing symlink
     case ec_file:is_symlink(Target) of
-        true  -> ec_file:remove(Target);
-        false -> ok;
-        {error, eperm} -> ok
+        true  -> rm_symlink(Target);
+        false -> ok
     end,
     %% if a directory already exists leave it unaltered, otherwise
     %% create it
@@ -525,6 +524,16 @@ do_symlink(Source, Target) ->
             win32_symlink(S, T);
         _          ->
             file:make_symlink(Source, Target)
+    end.
+
+rm_symlink(Target) ->
+    case ec_file:remove(Target) of
+        %% on windows a symlink to a dir can only be deleted via a directory
+        %% delete. since we are mostly likely calling this function in the case
+        %% where the target of the symlink has been removed the only way to
+        %% detect this is via the `eperm` error
+        {error, eperm} -> file:del_dir(Target);
+        ok             -> ok
     end.
 
 win32_symlink(Source, Target) ->
